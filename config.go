@@ -17,6 +17,7 @@ type config struct {
 	ScopeInputCharLimit   int      `json:"scopeInputCharLimit"`
 	CommitInputCharLimit  int      `json:"commitInputCharLimit"`
 	TotalInputCharLimit   int      `json:"totalInputCharLimit"`
+	OverflowCharLimit     bool     `json:"overflowCharLimit"`
 	ScopeCompletionOrder  string   `json:"scopeCompletionOrder"`
 	FindAllCommitMessages bool     `json:"findAllCommitMessages"`
 	StoreRuntime          bool     `json:"storeRuntime"`
@@ -113,6 +114,7 @@ func newConfig() *config {
 		ScopeInputCharLimit:   16,
 		CommitInputCharLimit:  100,
 		TotalInputCharLimit:   0,
+		OverflowCharLimit:     false,
 		ScopeCompletionOrder:  "descending",
 		FindAllCommitMessages: false,
 		StoreRuntime:          false,

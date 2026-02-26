@@ -3,6 +3,7 @@
     "scopeInputCharLimit": 16,
     "commitInputCharLimit": 100,
     "totalInputCharLimit": 0,
+    "overflowCharLimit": false,
     "scopeCompletionOrder": "descending",
     "findAllCommitMessages": false,
     "storeRuntime": true,

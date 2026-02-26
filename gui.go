@@ -28,6 +28,7 @@ var (
 	titleStyle           = lipgloss.NewStyle().MarginLeft(2)
 	itemStyle            = lipgloss.NewStyle().PaddingLeft(4)
 	characterCountColors = compat.AdaptiveColor{Light: lipgloss.Color("#8dacb6"), Dark: lipgloss.Color("240")}
+	overflowCharColor    = compat.AdaptiveColor{Light: lipgloss.Color("#d08770"), Dark: lipgloss.Color("#d08770")}
 	// #d08770: nord12
 	// #a3be8c: nord13
 	selectedItemColors   = compat.AdaptiveColor{Light: lipgloss.Color("#d08770"), Dark: lipgloss.Color("#a3be8c")}
@@ -91,6 +92,7 @@ type model struct {
 	ynInput                textinput.Model
 	constrainInput         bool
 	totalInputCharLimit    int
+	overflowCharLimit      bool
 	previousInputTexts     string
 	typed                  int
 	quitting               bool
@@ -136,6 +138,11 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 		commitInput.SetWidth(c.CommitInputCharLimit)
 	}
 
+	if c != nil && c.OverflowCharLimit {
+		scopeInput.CharLimit = 9999
+		commitInput.CharLimit = 9999
+	}
+
 	bodyConfirmation := textinput.New()
 	bodyConfirmation.Placeholder = "y/N"
 	bodyConfirmation.CharLimit = 1
@@ -161,6 +168,7 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 		ynInput:               bodyConfirmation,
 		constrainInput:        constrainInput,
 		totalInputCharLimit:   totalInputCharLimit,
+		overflowCharLimit:     c.OverflowCharLimit,
 		stagedFiles:           stagedFiles,
 		scopeCompletionOrder:  c.ScopeCompletionOrder,
 		commitSearchTerm:      commitSearchTerm,
@@ -382,7 +390,12 @@ func renderCurrentLimit(m *model, charLimit int, input string) string {
 	padWidth := len(strconv.Itoa(limit))
 	count := fmt.Sprintf(fmt.Sprintf("%%0%dd", padWidth), inputLength)
 
-	return lipgloss.NewStyle().Foreground(characterCountColors).Render(fmt.Sprintf(
+	color := characterCountColors
+	if m.overflowCharLimit && inputLength > limit {
+		color = overflowCharColor
+	}
+
+	return lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf(
 		"[%s/%d]",
 		count,
 		limit,
@@ -400,7 +413,7 @@ func (m *model) View() tea.View {
 	case !m.chosenScope:
 		limit := renderCurrentLimit(m, m.scopeInput.CharLimit, m.scopeInput.Value())
 
-		if m.constrainInput {
+		if m.constrainInput && !m.overflowCharLimit {
 			m.scopeInput.CharLimit = m.totalInputCharLimit - m.typed
 			if m.scopeInput.CharLimit == 0 {
 				m.scopeInput.Placeholder = lengthExceedMessage
@@ -419,7 +432,7 @@ func (m *model) View() tea.View {
 	case !m.chosenMsg:
 		limit := renderCurrentLimit(m, m.msgInput.CharLimit, m.msgInput.Value())
 
-		if m.constrainInput {
+		if m.constrainInput && !m.overflowCharLimit {
 			m.msgInput.CharLimit = m.totalInputCharLimit - m.typed
 			if m.msgInput.CharLimit == 0 {
 				m.msgInput.Placeholder = lengthExceedMessage

@@ -48,6 +48,9 @@ There is an additional `comet.json` file that includes the prefixes and descript
   - Default: 100
 - To adjust the total limit of characters in the *resulting* commit message, add the key `totalInputCharLimit` with the desired limit
   - Adding this key overrides scope- and message-specific limits
+- To allow typing beyond the character limit while still showing the count, add the key `overflowCharLimit` with the value `true`
+  - Default: `false`
+  - When enabled, the character count will turn orange when the limit is exceeded
 - To adjust the order of the scope completion values (i.e. longer or shorter strings first), add the key `scopeOrderCompletion` with either `"ascending"` or `"descending"`
   - Default: `"descending"`
 - To enable the storing of runtime statistics, add the key `storeRuntime` with the value `true`
