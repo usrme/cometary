@@ -187,6 +187,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch {
+		case msg.String() == "ctrl+c":
+			m.quitting = true
+			return m, tea.Quit
 		case !m.chosenPrefix:
 			return m.updatePrefixList(msg)
 		case !m.chosenScope:
@@ -244,9 +247,6 @@ func (m *model) updatePrefixList(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyPressMsg:
 		switch keypress := msg.String(); keypress {
-		case "ctrl+c":
-			m.quitting = true
-			return m, tea.Quit
 
 		case "1", "2", "3", "4", "5", "6", "7", "8", "9", "0":
 			var index int
