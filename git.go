@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -11,7 +12,7 @@ func filesInStaging() ([]string, error) {
 	cmd := exec.Command("git", "diff", "--no-ext-diff", "--cached", "--name-only")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return []string{}, fmt.Errorf(string(output))
+		return []string{}, errors.New(string(output))
 	}
 	lines := strings.TrimSpace(string(output))
 	if lines == "" {
@@ -24,7 +25,7 @@ func findGitDir() error {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf(string(output))
+		return errors.New(string(output))
 	}
 	return nil
 }
