@@ -193,6 +193,18 @@ func (m *model) Init() tea.Cmd {
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.PasteMsg:
+		switch {
+		case !m.chosenPrefix:
+			return m, nil
+		case !m.chosenScope:
+			m.scopeInput.SetValue(m.scopeInput.Value() + msg.Content)
+			m.scopeInput.CursorEnd()
+		case !m.chosenMsg:
+			m.msgInput.SetValue(m.msgInput.Value() + msg.Content)
+			m.msgInput.CursorEnd()
+		}
+		return m, nil
 	case tea.KeyPressMsg:
 		switch {
 		case msg.String() == "ctrl+c":
