@@ -18,7 +18,7 @@ Other minor changes include a fix to the prompt that asks for a commit message b
 - using `go install`:
 
 ```bash
-go install github.com/usrme/cometary@latest
+go install github.com/usrme/cometary/v2@latest
 ```
 
 - download a binary from the [releases](https://github.com/usrme/cometary/releases) page
