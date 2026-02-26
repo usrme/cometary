@@ -9,11 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	"charm.land/lipgloss/v2/compat"
 	"golang.org/x/exp/maps"
 )
 
@@ -26,17 +27,18 @@ var (
 	titleTextStyle       = lipgloss.NewStyle()
 	titleStyle           = lipgloss.NewStyle().MarginLeft(2)
 	itemStyle            = lipgloss.NewStyle().PaddingLeft(4)
-	characterCountColors = lipgloss.AdaptiveColor{Light: "#8dacb6", Dark: "240"}
+	characterCountColors = compat.AdaptiveColor{Light: lipgloss.Color("#8dacb6"), Dark: lipgloss.Color("240")}
 	// #d08770: nord12
 	// #a3be8c: nord13
-	selectedItemColors   = lipgloss.AdaptiveColor{Light: "#d08770", Dark: "#a3be8c"}
+	selectedItemColors   = compat.AdaptiveColor{Light: lipgloss.Color("#d08770"), Dark: lipgloss.Color("#a3be8c")}
 	selectedItemStyle    = lipgloss.NewStyle().Foreground(selectedItemColors)
 	selectedItemPadded   = lipgloss.NewStyle().Foreground(selectedItemColors).PaddingLeft(2)
 	itemDescriptionStyle = lipgloss.NewStyle().PaddingLeft(2).Faint(true)
-	paginationStyle      = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle            = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
+	listStyles           = list.DefaultStyles(true)
+	paginationStyle      = listStyles.PaginationStyle.PaddingLeft(4)
+	helpStyle            = listStyles.HelpStyle.PaddingLeft(4).PaddingBottom(1)
 	quitTextStyle        = lipgloss.NewStyle().Margin(1, 0, 2, 4)
-	versionStyle         = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#9b9b9b", Dark: "#5c5c5c"}).Render
+	versionStyle         = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#9b9b9b"), Dark: lipgloss.Color("#5c5c5c")}).Render
 	scopeInputText       = "What is the scope?"
 	msgInputText         = "What is the commit message?"
 	bodyInputText        = "Do you need to specify a body/footer?"
@@ -117,10 +119,10 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 
 	if c == nil || c.ScopeInputCharLimit == 0 {
 		scopeInput.CharLimit = 16
-		scopeInput.Width = 20
+		scopeInput.SetWidth(20)
 	} else {
 		scopeInput.CharLimit = c.ScopeInputCharLimit
-		scopeInput.Width = c.ScopeInputCharLimit
+		scopeInput.SetWidth(c.ScopeInputCharLimit)
 	}
 
 	commitInput := textinput.New()
@@ -128,16 +130,16 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 
 	if c == nil || c.CommitInputCharLimit == 0 {
 		commitInput.CharLimit = 100
-		commitInput.Width = 50
+		commitInput.SetWidth(50)
 	} else {
 		commitInput.CharLimit = c.CommitInputCharLimit
-		commitInput.Width = c.CommitInputCharLimit
+		commitInput.SetWidth(c.CommitInputCharLimit)
 	}
 
 	bodyConfirmation := textinput.New()
 	bodyConfirmation.Placeholder = "y/N"
 	bodyConfirmation.CharLimit = 1
-	bodyConfirmation.Width = 20
+	bodyConfirmation.SetWidth(20)
 
 	if c == nil || c.TotalInputCharLimit == 0 {
 		constrainInput = false
@@ -183,7 +185,7 @@ func (m *model) Init() tea.Cmd {
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch {
 		case !m.chosenPrefix:
 			return m.updatePrefixList(msg)
@@ -240,7 +242,7 @@ func (m *model) updatePrefixList(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.prefixList.SetWidth(msg.Width)
 		return m, nil
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
 			m.quitting = true
@@ -273,8 +275,8 @@ func (m *model) updatePrefixList(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *model) updateScopeInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
+	case tea.KeyPressMsg:
+		switch msg.Code {
 		case tea.KeyEnter:
 			m.chosenScope = true
 			m.scope = m.scopeInput.Value()
@@ -294,7 +296,7 @@ func (m *model) updateScopeInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.scopeInputIndex += 1
 			m.scopeInput.CursorEnd()
-		case tea.KeyCtrlC, tea.KeyEsc:
+		case tea.KeyEsc:
 			return m, tea.Quit
 		}
 	}
@@ -306,8 +308,8 @@ func (m *model) updateScopeInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *model) updateMsgInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
+	case tea.KeyPressMsg:
+		switch msg.Code {
 		case tea.KeyEnter:
 			m.chosenMsg = true
 			m.msg = m.msgInput.Value()
@@ -329,7 +331,7 @@ func (m *model) updateMsgInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.messageInputIndex += 1
 				m.msgInput.CursorEnd()
 			}
-		case tea.KeyCtrlC, tea.KeyEsc:
+		case tea.KeyEsc:
 			return m, tea.Quit
 		}
 	}
@@ -341,8 +343,8 @@ func (m *model) updateMsgInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *model) updateYNInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
+	case tea.KeyPressMsg:
+		switch msg.Code {
 		case tea.KeyEnter:
 			m.chosenMsg = true
 			switch strings.ToLower(m.ynInput.Value()) {
@@ -357,7 +359,7 @@ func (m *model) updateYNInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 				selectedItemStyle.Render(strconv.FormatBool(m.specifyBody)),
 			)
 			return m, tea.Quit
-		case tea.KeyCtrlC, tea.KeyEsc:
+		case tea.KeyEsc:
 			return m, tea.Quit
 		}
 	}
@@ -387,14 +389,14 @@ func renderCurrentLimit(m *model, charLimit int, input string) string {
 	))
 }
 
-func (m *model) View() string {
+func (m *model) View() tea.View {
 	lengthExceedMessage := "Number of characters equals total input limit. Value will be left blank"
 
 	m.prefixList.NewStatusMessage(versionStyle(pkgVersion()))
 
 	switch {
 	case !m.chosenPrefix:
-		return "\n" + m.prefixList.View()
+		return tea.NewView("\n" + m.prefixList.View())
 	case !m.chosenScope:
 		limit := renderCurrentLimit(m, m.scopeInput.CharLimit, m.scopeInput.Value())
 
@@ -407,13 +409,13 @@ func (m *model) View() string {
 			}
 		}
 
-		return titleStyle.Render(fmt.Sprintf(
+		return tea.NewView(titleStyle.Render(fmt.Sprintf(
 			"%s%s (Enter to skip / Esc to cancel) %s\n%s",
 			m.previousInputTexts,
 			scopeInputText,
 			limit,
 			m.scopeInput.View(),
-		))
+		)))
 	case !m.chosenMsg:
 		limit := renderCurrentLimit(m, m.msgInput.CharLimit, m.msgInput.Value())
 
@@ -426,27 +428,27 @@ func (m *model) View() string {
 			}
 		}
 
-		return titleStyle.Render(fmt.Sprintf(
+		return tea.NewView(titleStyle.Render(fmt.Sprintf(
 			"%s%s (Esc to cancel) %s\n%s",
 			m.previousInputTexts,
 			msgInputText,
 			limit,
 			m.msgInput.View(),
-		))
+		)))
 	case !m.chosenBody:
-		return titleStyle.Render(fmt.Sprintf(
+		return tea.NewView(titleStyle.Render(fmt.Sprintf(
 			"%s%s (Esc to cancel)\n%s",
 			m.previousInputTexts,
 			bodyInputText,
 			m.ynInput.View(),
-		))
+		)))
 	case m.quitting:
-		return quitTextStyle.Render("Aborted.\n")
+		return tea.NewView(quitTextStyle.Render("Aborted.\n"))
 	default:
-		return titleStyle.Render(fmt.Sprintf(
+		return tea.NewView(titleStyle.Render(fmt.Sprintf(
 			"%s\n---\n",
 			m.previousInputTexts,
-		))
+		)))
 	}
 }
 
