@@ -23,7 +23,7 @@ go install github.com/usrme/cometary@latest
 
 - download a binary from the [releases](https://github.com/usrme/cometary/releases) page
 
-- build it yourself (requires Go 1.18+):
+- build it yourself (requires Go 1.24+):
 
 ```bash
 git clone https://github.com/usrme/cometary.git
