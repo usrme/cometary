@@ -100,7 +100,7 @@ func formatStat(stat string, seconds float32, format string) string {
 	return fmt.Sprintf(" > %s: %.2f %s", stat, value, format)
 }
 
-func fail(format string, args ...interface{}) {
+func fail(format string, args ...any) {
 	if !strings.HasSuffix(format, "\n") {
 		format = format + "\n"
 	}
