@@ -9,7 +9,9 @@ import (
 )
 
 func main() {
-	config := loadConfig()
+	config, configPath := loadConfig()
+	applyColors(defaultColors())
+	loadColorScheme(configPath, config)
 
 	format := config.ShowStatsFormat
 	if config.SessionStatAsSeconds {

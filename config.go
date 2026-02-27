@@ -25,6 +25,7 @@ type config struct {
 	ShowStats             bool     `json:"showStats"`
 	ShowStatsFormat       string   `json:"showStatsFormat"`
 	SessionStatAsSeconds  bool     `json:"sessionStatAsSeconds"`
+	ColorScheme           string   `json:"colorScheme,omitempty"`
 }
 
 func (i prefix) Title() string       { return i.T }
@@ -80,7 +81,7 @@ var defaultPrefixes = []prefix{
 
 const applicationName = "cometary"
 
-func loadConfig() *config {
+func loadConfig() (*config, string) {
 	nonXdgConfigFile := ".comet.json"
 
 	// Check for configuration file local to current directory
@@ -104,7 +105,7 @@ func loadConfig() *config {
 		}
 	}
 
-	return newConfig()
+	return newConfig(), ""
 }
 
 func newConfig() *config {
@@ -139,16 +140,16 @@ func GetConfigDir() (string, error) {
 	return filepath.Join(configDir, applicationName), nil
 }
 
-func loadConfigFile(path string) *config {
+func loadConfigFile(path string) (*config, string) {
 	var c config
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return &c
+		return &c, path
 	}
 
 	if err := json.Unmarshal(data, &c); err != nil {
-		return &c
+		return &c, path
 	}
 
-	return &c
+	return &c, path
 }
