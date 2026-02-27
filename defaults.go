@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"charm.land/bubbles/v2/list"
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/compat"
 )
@@ -104,6 +105,7 @@ func defaultColors() colors {
 }
 
 func applyColors(c colors) {
+	listStyles = list.DefaultStyles(true)
 	titleTextStyle = lipgloss.NewStyle()
 	if c.TitleStyle.MarginLeft != nil {
 		titleStyle = lipgloss.NewStyle().MarginLeft(*c.TitleStyle.MarginLeft)

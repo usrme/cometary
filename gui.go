@@ -24,22 +24,20 @@ const (
 )
 
 var (
-	titleTextStyle       = lipgloss.NewStyle()
-	titleStyle           = lipgloss.NewStyle().MarginLeft(2)
-	itemStyle            = lipgloss.NewStyle().PaddingLeft(4)
-	characterCountColors = compat.AdaptiveColor{Light: lipgloss.Color("#8dacb6"), Dark: lipgloss.Color("240")}
-	overflowCharColor    = compat.AdaptiveColor{Light: lipgloss.Color("#d08770"), Dark: lipgloss.Color("#d08770")}
-	// #d08770: nord12
-	// #a3be8c: nord13
-	selectedItemColors   = compat.AdaptiveColor{Light: lipgloss.Color("#d08770"), Dark: lipgloss.Color("#a3be8c")}
-	selectedItemStyle    = lipgloss.NewStyle().Foreground(selectedItemColors)
-	selectedItemPadded   = lipgloss.NewStyle().Foreground(selectedItemColors).PaddingLeft(2)
-	itemDescriptionStyle = lipgloss.NewStyle().PaddingLeft(2).Faint(true)
-	listStyles           = list.DefaultStyles(true)
-	paginationStyle      = listStyles.PaginationStyle.PaddingLeft(4)
-	helpStyle            = listStyles.HelpStyle.PaddingLeft(4).PaddingBottom(1)
-	quitTextStyle        = lipgloss.NewStyle().Margin(1, 0, 2, 4)
-	versionStyle         = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#9b9b9b"), Dark: lipgloss.Color("#5c5c5c")}).Render
+	titleTextStyle       lipgloss.Style
+	titleStyle           lipgloss.Style
+	itemStyle            lipgloss.Style
+	characterCountColors compat.AdaptiveColor
+	overflowCharColor    compat.AdaptiveColor
+	selectedItemColors   compat.AdaptiveColor
+	selectedItemStyle    lipgloss.Style
+	selectedItemPadded   lipgloss.Style
+	itemDescriptionStyle lipgloss.Style
+	listStyles           list.Styles
+	paginationStyle      lipgloss.Style
+	helpStyle            lipgloss.Style
+	quitTextStyle        lipgloss.Style
+	versionStyle         func(...string) string
 	scopeInputText       = "What is the scope?"
 	msgInputText         = "What is the commit message?"
 	bodyInputText        = "Do you need to specify a body/footer?"
