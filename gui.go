@@ -24,25 +24,26 @@ const (
 )
 
 var (
-	titleTextStyle       lipgloss.Style
-	titleStyle           lipgloss.Style
-	itemStyle            lipgloss.Style
-	characterCountColors compat.AdaptiveColor
-	overflowCharColor    compat.AdaptiveColor
-	selectedItemColors   compat.AdaptiveColor
-	selectedItemStyle    lipgloss.Style
-	selectedItemPadded   lipgloss.Style
-	itemDescriptionStyle lipgloss.Style
-	listStyles           list.Styles
-	paginationStyle      lipgloss.Style
-	helpStyle            lipgloss.Style
-	quitTextStyle        lipgloss.Style
-	versionStyle         func(...string) string
-	scopeInputText       = "What is the scope?"
-	msgInputText         = "What is the commit message?"
-	bodyInputText        = "Do you need to specify a body/footer?"
-	constrainInput       bool
-	totalInputCharLimit  int
+	titleTextStyle        lipgloss.Style
+	titleStyle            lipgloss.Style
+	itemStyle             lipgloss.Style
+	characterCountColors  compat.AdaptiveColor
+	overflowCharColor     compat.AdaptiveColor
+	selectedItemColors    compat.AdaptiveColor
+	selectedItemStyle     lipgloss.Style
+	selectedItemPadded    lipgloss.Style
+	itemDescriptionStyle  lipgloss.Style
+	listStyles            list.Styles
+	paginationStyle       lipgloss.Style
+	helpStyle             lipgloss.Style
+	quitTextStyle         lipgloss.Style
+	versionStyle          func(...string) string
+	selectedItemIndicator string
+	scopeInputText        = "What is the scope?"
+	msgInputText          = "What is the commit message?"
+	bodyInputText         = "Do you need to specify a body/footer?"
+	constrainInput        bool
+	totalInputCharLimit   int
 )
 
 type itemDelegate struct{}
@@ -60,7 +61,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 
 	var output string
 	if index == m.Index() {
-		output = selectedItemPadded.Render("> " + str)
+		output = selectedItemPadded.Render(selectedItemIndicator + str)
 	} else {
 		output = itemStyle.Render(str)
 	}

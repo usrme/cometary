@@ -11,19 +11,20 @@ import (
 )
 
 type colors struct {
-	TitleTextStyle       styleConfig `json:"titleTextStyle"`
-	TitleStyle           styleConfig `json:"titleStyle"`
-	ItemStyle            styleConfig `json:"itemStyle"`
-	CharacterCountColors colorConfig `json:"characterCountColors"`
-	OverflowCharColor    colorConfig `json:"overflowCharColor"`
-	SelectedItemColors   colorConfig `json:"selectedItemColors"`
-	SelectedItemStyle    styleConfig `json:"selectedItemStyle"`
-	SelectedItemPadded   styleConfig `json:"selectedItemPadded"`
-	ItemDescriptionStyle styleConfig `json:"itemDescriptionStyle"`
-	PaginationStyle      styleConfig `json:"paginationStyle"`
-	HelpStyle            styleConfig `json:"helpStyle"`
-	QuitTextStyle        styleConfig `json:"quitTextStyle"`
-	VersionStyle         colorConfig `json:"versionStyle"`
+	TitleTextStyle        styleConfig `json:"titleTextStyle"`
+	TitleStyle            styleConfig `json:"titleStyle"`
+	ItemStyle             styleConfig `json:"itemStyle"`
+	CharacterCountColors  colorConfig `json:"characterCountColors"`
+	OverflowCharColor     colorConfig `json:"overflowCharColor"`
+	SelectedItemColors    colorConfig `json:"selectedItemColors"`
+	SelectedItemStyle     styleConfig `json:"selectedItemStyle"`
+	SelectedItemPadded    styleConfig `json:"selectedItemPadded"`
+	ItemDescriptionStyle  styleConfig `json:"itemDescriptionStyle"`
+	PaginationStyle       styleConfig `json:"paginationStyle"`
+	HelpStyle             styleConfig `json:"helpStyle"`
+	QuitTextStyle         styleConfig `json:"quitTextStyle"`
+	VersionStyle          colorConfig `json:"versionStyle"`
+	SelectedItemIndicator string      `json:"selectedItemIndicator,omitempty"`
 }
 
 type styleConfig struct {
@@ -101,6 +102,7 @@ func defaultColors() colors {
 			Light: "#9b9b9b",
 			Dark:  "#5c5c5c",
 		},
+		SelectedItemIndicator: ">",
 	}
 }
 
@@ -167,6 +169,9 @@ func applyColors(c colors) {
 			Light: lipgloss.Color(c.VersionStyle.Light),
 			Dark:  lipgloss.Color(c.VersionStyle.Dark),
 		}).Render
+	if c.SelectedItemIndicator != "" {
+		selectedItemIndicator = c.SelectedItemIndicator + " "
+	}
 }
 
 func orDefault[T any](ptr *T, defaultVal T) T {
@@ -255,6 +260,9 @@ func mergeColors(defaults, loaded colors) colors {
 	}
 	if loaded.VersionStyle.Light != "" || loaded.VersionStyle.Dark != "" {
 		defaults.VersionStyle = loaded.VersionStyle
+	}
+	if loaded.SelectedItemIndicator != "" {
+		defaults.SelectedItemIndicator = loaded.SelectedItemIndicator
 	}
 	return defaults
 }

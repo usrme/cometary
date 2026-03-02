@@ -79,7 +79,8 @@ There is an additional `comet.json` file that includes the prefixes and descript
       "versionStyle": {
         "light": "#9b9b9b",
         "dark": "#5c5c5c"
-      }
+      },
+      "selectedItemIndicator": "→"
     }
     ```
   - Available fields:
@@ -96,6 +97,7 @@ There is an additional `comet.json` file that includes the prefixes and descript
     - `helpStyle`: paddingLeft, paddingBottom
     - `quitTextStyle`: margin, marginTop, marginBottom, marginLeft
     - `versionStyle`: light, dark
+    - `selectedItemIndicator`: string (e.g. ">", "→", "*")
 
 There is also a `-m` flag that takes a string that will be used as the basis for a search among all commit messages. For example: if you're committing something of a chore and always just use the message "update dependencies", you can do `cometary -m update` (use quotation marks if argument to `-m` includes spaces) and Cometary will populate the list of possible messages with those that include "update", which can then be cycled through with the Tab key. This is similar to the search you could make with `git log --grep="update"`.
 
