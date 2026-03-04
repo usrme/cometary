@@ -25,10 +25,12 @@ func main() {
 
 	if len(os.Args) > 1 && os.Args[1] == "-s" {
 		stats := tracker.GetStats()
-		fmt.Println(formatStat("Daily", stats.Daily[stats.CurrentDay], config.ShowStatsFormat))
-		fmt.Println(formatStat("Weekly", stats.Weekly[stats.CurrentWeek], config.ShowStatsFormat))
-		fmt.Println(formatStat("Monthly", stats.Monthly[stats.CurrentMonth], config.ShowStatsFormat))
-		fmt.Println(formatStat("Yearly", stats.Yearly[stats.CurrentYear], config.ShowStatsFormat))
+		printStatsTable([]statRow{
+			{"Daily", stats.Daily[stats.CurrentDay]},
+			{"Weekly", stats.Weekly[stats.CurrentWeek]},
+			{"Monthly", stats.Monthly[stats.CurrentMonth]},
+			{"Yearly", stats.Yearly[stats.CurrentYear]},
+		}, config.ShowStatsFormat)
 		os.Exit(0)
 	}
 
@@ -74,32 +76,84 @@ func main() {
 		if config.ShowRuntime && !config.ShowStats {
 			stats := tracker.GetStats()
 			fmt.Println()
-			fmt.Println(formatStat("Session", stats.Session, format))
+			printStatsTable([]statRow{
+				{"Session", stats.Session},
+			}, format)
 		}
 	}
 
 	if config.ShowStats {
 		stats := tracker.GetStats()
 		fmt.Println()
-		fmt.Println(formatStat("Session", stats.Session, format))
-		fmt.Println(formatStat("Daily", stats.Daily[stats.CurrentDay], config.ShowStatsFormat))
-		fmt.Println(formatStat("Weekly", stats.Weekly[stats.CurrentWeek], config.ShowStatsFormat))
-		fmt.Println(formatStat("Monthly", stats.Monthly[stats.CurrentMonth], config.ShowStatsFormat))
-		fmt.Println(formatStat("Yearly", stats.Yearly[stats.CurrentYear], config.ShowStatsFormat))
+		printStatsTable([]statRow{
+			{"Session", stats.Session},
+			{"Daily", stats.Daily[stats.CurrentDay]},
+			{"Weekly", stats.Weekly[stats.CurrentWeek]},
+			{"Monthly", stats.Monthly[stats.CurrentMonth]},
+			{"Yearly", stats.Yearly[stats.CurrentYear]},
+		}, config.ShowStatsFormat)
 	}
 }
 
-func formatStat(stat string, seconds float32, format string) string {
-	var value float32
-	switch format {
-	case "minutes":
-		value = seconds / 60.0
-	case "hours":
-		value = seconds / 3600.0
-	default:
-		value = seconds
+type statRow struct {
+	Label   string
+	Seconds float32
+}
+
+func printStatsTable(rows []statRow, format string) {
+	// Compute display values.
+	type displayRow struct {
+		label string
+		value string
+		unit  string
 	}
-	return fmt.Sprintf(" > %s: %.2f %s", stat, value, format)
+	unit := format
+	if unit == "" {
+		unit = "seconds"
+	}
+
+	display := make([]displayRow, len(rows))
+	labelWidth := 0
+	valueWidth := 0
+	for i, r := range rows {
+		var v float32
+		switch format {
+		case "minutes":
+			v = r.Seconds / 60.0
+		case "hours":
+			v = r.Seconds / 3600.0
+		default:
+			v = r.Seconds
+		}
+		display[i] = displayRow{
+			label: r.Label,
+			value: fmt.Sprintf("%.2f", v),
+			unit:  unit,
+		}
+		if len(r.Label) > labelWidth {
+			labelWidth = len(r.Label)
+		}
+		if len(display[i].value) > valueWidth {
+			valueWidth = len(display[i].value)
+		}
+	}
+
+	// Derive hbar width from a concrete formatted row so padding is exact.
+	unitWidth := len(unit)
+	sampleRow := fmt.Sprintf("  %-*s  %*s  %-*s  ",
+		labelWidth, "", valueWidth, "", unitWidth, unit)
+	hbar := strings.Repeat("─", len(sampleRow))
+
+	fmt.Printf(" ╭%s╮\n", hbar)
+	for _, d := range display {
+		fmt.Printf(" │  %-*s  %*s  %-*s  │\n",
+			labelWidth, d.label,
+			valueWidth, d.value,
+			unitWidth, d.unit,
+		)
+
+	}
+	fmt.Printf(" ╰%s╯\n", hbar)
 }
 
 func fail(format string, args ...any) {
