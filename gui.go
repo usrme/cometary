@@ -115,8 +115,27 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 	prefixList.Styles.PaginationStyle = paginationStyle
 	prefixList.Styles.HelpStyle = helpStyle
 
+	tiStyles := textinput.DefaultStyles(true)
+	tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
+	tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
+
 	scopeInput := textinput.New()
 	scopeInput.Placeholder = "Scope"
+	scopeInput.Prompt = selectedItemIndicator
+
+	commitInput := textinput.New()
+	commitInput.Placeholder = "Commit message"
+	commitInput.Prompt = selectedItemIndicator
+
+	bodyConfirmation := textinput.New()
+	bodyConfirmation.Placeholder = "y/N"
+	bodyConfirmation.CharLimit = 1
+	bodyConfirmation.SetWidth(20)
+	bodyConfirmation.Prompt = selectedItemIndicator
+
+	(&scopeInput).SetStyles(tiStyles)
+	(&commitInput).SetStyles(tiStyles)
+	(&bodyConfirmation).SetStyles(tiStyles)
 
 	if c == nil || c.ScopeInputCharLimit == 0 {
 		scopeInput.CharLimit = 16
@@ -125,9 +144,6 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 		scopeInput.CharLimit = c.ScopeInputCharLimit
 		scopeInput.SetWidth(c.ScopeInputCharLimit)
 	}
-
-	commitInput := textinput.New()
-	commitInput.Placeholder = "Commit message"
 
 	if c == nil || c.CommitInputCharLimit == 0 {
 		commitInput.CharLimit = 100
@@ -141,11 +157,6 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 		scopeInput.CharLimit = 9999
 		commitInput.CharLimit = 9999
 	}
-
-	bodyConfirmation := textinput.New()
-	bodyConfirmation.Placeholder = "y/N"
-	bodyConfirmation.CharLimit = 1
-	bodyConfirmation.SetWidth(20)
 
 	if c == nil || c.TotalInputCharLimit == 0 {
 		constrainInput = false
@@ -389,28 +400,41 @@ func (m *model) updateYNInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func renderCurrentLimit(m *model, charLimit int, input string) string {
-	var limit, inputLength int
-	if m.constrainInput {
-		limit = m.totalInputCharLimit
-		inputLength = len(m.prefix) + len("(): ") + len(input) + len(m.scope)
-	} else {
-		limit = charLimit
-		inputLength = len(input)
-	}
+	_, color := getInputColors(m, charLimit, input)
+	return lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf("[%s/%d]", getInputCount(m, charLimit, input), getInputLimit(m, charLimit, input)))
+}
 
-	padWidth := len(strconv.Itoa(limit))
-	count := fmt.Sprintf(fmt.Sprintf("%%0%dd", padWidth), inputLength)
+func getInputColors(m *model, charLimit int, input string) (bool, compat.AdaptiveColor) {
+	limit := getInputLimit(m, charLimit, input)
+	inputLength := getInputLength(m, input)
 
 	color := characterCountColors
-	if m.overflowCharLimit && inputLength > limit {
+	overflow := m.overflowCharLimit && inputLength > limit
+	if overflow {
 		color = overflowCharColor
 	}
+	return overflow, color
+}
 
-	return lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf(
-		"[%s/%d]",
-		count,
-		limit,
-	))
+func getInputLimit(m *model, charLimit int, input string) int {
+	if m.constrainInput {
+		return m.totalInputCharLimit
+	}
+	return charLimit
+}
+
+func getInputLength(m *model, input string) int {
+	if m.constrainInput {
+		return len(m.prefix) + len("(): ") + len(input) + len(m.scope)
+	}
+	return len(input)
+}
+
+func getInputCount(m *model, charLimit int, input string) string {
+	limit := getInputLimit(m, charLimit, input)
+	inputLength := getInputLength(m, input)
+	padWidth := len(strconv.Itoa(limit))
+	return fmt.Sprintf(fmt.Sprintf("%%0%dd", padWidth), inputLength)
 }
 
 func (m *model) View() tea.View {
@@ -433,6 +457,14 @@ func (m *model) View() tea.View {
 			}
 		}
 
+		overflow, scopeColor := getInputColors(m, m.scopeInput.CharLimit, m.scopeInput.Value())
+		if overflow {
+			tiStyles := textinput.DefaultStyles(true)
+			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(scopeColor)
+			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(scopeColor)
+			(&m.scopeInput).SetStyles(tiStyles)
+		}
+
 		return tea.NewView(titleStyle.Render(fmt.Sprintf(
 			"%s%s (Enter to skip / Esc to cancel) %s\n%s",
 			m.previousInputTexts,
@@ -450,6 +482,14 @@ func (m *model) View() tea.View {
 				m.msgInput.EchoMode = textinput.EchoNone
 				m.msgInput.SetValue("")
 			}
+		}
+
+		overflow, msgColor := getInputColors(m, m.msgInput.CharLimit, m.msgInput.Value())
+		if overflow {
+			tiStyles := textinput.DefaultStyles(true)
+			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(msgColor)
+			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(msgColor)
+			(&m.msgInput).SetStyles(tiStyles)
 		}
 
 		return tea.NewView(titleStyle.Render(fmt.Sprintf(
