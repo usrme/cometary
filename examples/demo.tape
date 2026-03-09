@@ -41,3 +41,38 @@ Sleep 2
 # Confirm no ammend
 Enter
 Sleep 4
+
+# Create new file and stage it
+Type "touch file2"
+Sleep 1
+Enter
+Type "git add file2"
+Sleep 1
+Enter
+
+# Enter program
+Type "cometary"
+Sleep 500ms
+Enter
+Sleep 3
+
+# Choose correct type of commit
+Down@500ms 1
+Enter
+Sleep 3
+
+# Enter commit scope
+Type "file2"
+Sleep 2
+Enter
+Sleep 2
+
+# Enter commit message
+Type "add another file but with a really long commit message for demo"
+Sleep 2
+Enter
+Sleep 2
+
+# Confirm no ammend
+Enter
+Sleep 4
