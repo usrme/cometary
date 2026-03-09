@@ -5,7 +5,7 @@ Set FontSize 20
 Set Width 1600
 Set Height 600
 Set Padding 80
-Set Theme "nord"
+Set Theme "Everblush"
 
 # Create file and stage it
 Type "touch file"
