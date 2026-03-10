@@ -457,13 +457,16 @@ func (m *model) View() tea.View {
 			}
 		}
 
-		overflow, scopeColor := getInputColors(m, m.scopeInput.CharLimit, m.scopeInput.Value())
+		overflow, _ := getInputColors(m, m.scopeInput.CharLimit, m.scopeInput.Value())
+		tiStyles := textinput.DefaultStyles(true)
 		if overflow {
-			tiStyles := textinput.DefaultStyles(true)
-			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(scopeColor)
-			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(scopeColor)
-			(&m.scopeInput).SetStyles(tiStyles)
+			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
+			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
+		} else {
+			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
+			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
 		}
+		(&m.scopeInput).SetStyles(tiStyles)
 
 		return tea.NewView(titleStyle.Render(fmt.Sprintf(
 			"%s%s (Enter to skip / Esc to cancel) %s\n%s",
@@ -484,13 +487,16 @@ func (m *model) View() tea.View {
 			}
 		}
 
-		overflow, msgColor := getInputColors(m, m.msgInput.CharLimit, m.msgInput.Value())
+		overflow, _ := getInputColors(m, m.msgInput.CharLimit, m.msgInput.Value())
+		tiStyles := textinput.DefaultStyles(true)
 		if overflow {
-			tiStyles := textinput.DefaultStyles(true)
-			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(msgColor)
-			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(msgColor)
-			(&m.msgInput).SetStyles(tiStyles)
+			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
+			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
+		} else {
+			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
+			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
 		}
+		(&m.msgInput).SetStyles(tiStyles)
 
 		return tea.NewView(titleStyle.Render(fmt.Sprintf(
 			"%s%s (Esc to cancel) %s\n%s",
