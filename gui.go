@@ -600,9 +600,27 @@ func findCommitMessages(grep string, findAll bool) tea.Cmd {
 }
 
 func pkgVersion() string {
-	version := "unknown"
-	if info, ok := debug.ReadBuildInfo(); ok {
-		version = info.Main.Version
+	if version != "" {
+		return version
 	}
-	return version
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unknown"
+	}
+	var vcsRev, vcsModified string
+	for _, s := range info.Settings {
+		switch s.Key {
+		case "vcs.revision":
+			vcsRev = s.Value
+		case "vcs.modified":
+			vcsModified = s.Value
+		}
+	}
+	if vcsRev != "" {
+		if vcsModified == "true" {
+			return vcsRev + " (modified)"
+		}
+		return vcsRev
+	}
+	return "unknown"
 }

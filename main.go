@@ -8,6 +8,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
+var version = ""
+
 func main() {
 	config, configPath := loadConfig()
 	applyColors(defaultColors())

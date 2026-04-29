@@ -9,6 +9,7 @@ builds:
       # '-s': omit the symbol table and debug information
       # '-w': omit the DWARF symbol table
       - "-s -w"
+      - "-X main.version={{.Version}}"
     flags:
       # remove all file system paths from the resulting executable
       - "-trimpath"
