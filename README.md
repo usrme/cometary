@@ -109,7 +109,7 @@ Press `Ctrl+P` to view your staged changes in an external pager (uses `less` wit
 
 ## Acknowledgments
 
-Couldn't have been possible without the work of [Liam Galvin](https://github.com/liamg).
+Couldn't have been possible without the work of [Liam Galvin](https://github.com/liamg) who created the original [Comet](https://github.com/liamg/comet) that inspired this. I've absolutely loved working on this for almost 4 years now!
 
 ## License
 
