@@ -103,6 +103,10 @@ There is also a `-m` flag that takes a string that will be used as the basis for
 
 By default the `-m` flag behavior is set to only populate with possible messages that adhere to conventional commits, but this behavior can be changed by setting the `findAllCommitMessages` value in the configuration file as `true`.
 
+### Viewing staged changes
+
+Press `Ctrl+P` to view your staged changes in an external pager (uses `less` with ANSI color support). This runs `git diff --cached` directly in the terminal, allowing you to navigate the diff with standard pager controls. Press `q` to exit and return to Cometary with the terminal state restored exactly as it was.
+
 ## Acknowledgments
 
 Couldn't have been possible without the work of [Liam Galvin](https://github.com/liamg).
