@@ -22,9 +22,7 @@ func runDiffPager() tea.Cmd {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return nil
-	})
+	return tea.ExecProcess(cmd, nil)
 }
 
 func filesInStaging() ([]string, error) {

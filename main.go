@@ -8,7 +8,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
-var version = ""
+var version string
 
 func main() {
 	config, configPath := loadConfig()

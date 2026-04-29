@@ -3,8 +3,8 @@ package main
 import "charm.land/bubbles/v2/key"
 
 type customKeyMap struct {
-	Cycle  key.Binding
-	DiffCh key.Binding
+	Cycle key.Binding
+	Diff  key.Binding
 }
 
 var customKeys = customKeyMap{
@@ -12,8 +12,8 @@ var customKeys = customKeyMap{
 		key.WithKeys("tab"),
 		key.WithHelp("tab", "cycle through commit messages or changed file paths"),
 	),
-	DiffCh: key.NewBinding(
+	Diff: key.NewBinding(
 		key.WithKeys("ctrl+p"),
-		key.WithHelp("Ctrl+P", "view staged changes"),
+		key.WithHelp("ctrl+p", "view staged changes"),
 	),
 }

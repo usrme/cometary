@@ -73,7 +73,6 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 type (
 	stagedFilesMsg    []string
 	commitMessagesMsg []string
-	diffOutputMsg     struct{ output string }
 )
 
 type model struct {
@@ -104,8 +103,6 @@ type model struct {
 	findAllCommitMessages  bool
 	commitMessages         []string
 	messageInputIndex      int
-	viewingDiff            bool
-	diffOutput             string
 }
 
 func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
@@ -170,7 +167,7 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 
 	bindings := []key.Binding{
 		customKeys.Cycle,
-		customKeys.DiffCh,
+		customKeys.Diff,
 	}
 	prefixList.AdditionalShortHelpKeys = func() []key.Binding { return bindings }
 	prefixList.AdditionalFullHelpKeys = func() []key.Binding { return bindings }
@@ -220,8 +217,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case tea.KeyPressMsg:
-		if msg.String() == "ctrl+p" {
-			return m.handleDiffToggle()
+		if key.Matches(msg, customKeys.Diff) {
+			return m, runDiffPager()
 		}
 		switch {
 		case msg.String() == "ctrl+c":
@@ -244,19 +241,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case commitMessagesMsg:
 		m.commitMessages = msg
 		return m, nil
-	case diffOutputMsg:
-		m.diffOutput = msg.output
-		return m, nil
 	}
 	return m, nil
 }
 
 func (m *model) Finished() bool {
 	return m.chosenBody
-}
-
-func (m *model) handleDiffToggle() (tea.Model, tea.Cmd) {
-	return m, runDiffPager()
 }
 
 func (m *model) CommitMessage() (string, bool) {
@@ -457,8 +447,6 @@ func (m *model) View() tea.View {
 	m.prefixList.NewStatusMessage(versionStyle(pkgVersion()))
 
 	switch {
-	case m.viewingDiff:
-		return tea.NewView("\n" + m.diffOutput)
 	case !m.chosenPrefix:
 		return tea.NewView("\n" + m.prefixList.View())
 	case !m.chosenScope:
