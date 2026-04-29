@@ -6,7 +6,22 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	tea "charm.land/bubbletea/v2"
 )
+
+// runDiffPager displays staged diff in an external pager.
+// --no-pager is used to force git to output raw (allowing --color=always to work),
+// then piped to less -R to enable ANSI color handling while providing navigation.
+func runDiffPager() tea.Cmd {
+	cmd := exec.Command("sh", "-c", "git --no-pager diff --color=always --cached | less -R")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return tea.ExecProcess(cmd, func(err error) tea.Msg {
+		return nil
+	})
+}
 
 func filesInStaging() ([]string, error) {
 	cmd := exec.Command("git", "diff", "--no-ext-diff", "--cached", "--name-only")

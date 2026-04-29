@@ -73,6 +73,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 type (
 	stagedFilesMsg    []string
 	commitMessagesMsg []string
+	diffOutputMsg     struct{ output string }
 )
 
 type model struct {
@@ -103,6 +104,8 @@ type model struct {
 	findAllCommitMessages  bool
 	commitMessages         []string
 	messageInputIndex      int
+	viewingDiff            bool
+	diffOutput             string
 }
 
 func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
@@ -167,6 +170,7 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 
 	bindings := []key.Binding{
 		customKeys.Cycle,
+		customKeys.DiffCh,
 	}
 	prefixList.AdditionalShortHelpKeys = func() []key.Binding { return bindings }
 	prefixList.AdditionalFullHelpKeys = func() []key.Binding { return bindings }
@@ -216,6 +220,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case tea.KeyPressMsg:
+		if msg.String() == "ctrl+p" {
+			return m.handleDiffToggle()
+		}
 		switch {
 		case msg.String() == "ctrl+c":
 			m.quitting = true
@@ -237,12 +244,19 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case commitMessagesMsg:
 		m.commitMessages = msg
 		return m, nil
+	case diffOutputMsg:
+		m.diffOutput = msg.output
+		return m, nil
 	}
 	return m, nil
 }
 
 func (m *model) Finished() bool {
 	return m.chosenBody
+}
+
+func (m *model) handleDiffToggle() (tea.Model, tea.Cmd) {
+	return m, runDiffPager()
 }
 
 func (m *model) CommitMessage() (string, bool) {
@@ -401,11 +415,11 @@ func (m *model) updateYNInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func renderCurrentLimit(m *model, charLimit int, input string) string {
 	_, color := getInputColors(m, charLimit, input)
-	return lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf("[%s/%d]", getInputCount(m, charLimit, input), getInputLimit(m, charLimit, input)))
+	return lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf("[%s/%d]", getInputCount(m, charLimit, input), getInputLimit(m, charLimit)))
 }
 
 func getInputColors(m *model, charLimit int, input string) (bool, compat.AdaptiveColor) {
-	limit := getInputLimit(m, charLimit, input)
+	limit := getInputLimit(m, charLimit)
 	inputLength := getInputLength(m, input)
 
 	color := characterCountColors
@@ -416,7 +430,7 @@ func getInputColors(m *model, charLimit int, input string) (bool, compat.Adaptiv
 	return overflow, color
 }
 
-func getInputLimit(m *model, charLimit int, input string) int {
+func getInputLimit(m *model, charLimit int) int {
 	if m.constrainInput {
 		return m.totalInputCharLimit
 	}
@@ -431,7 +445,7 @@ func getInputLength(m *model, input string) int {
 }
 
 func getInputCount(m *model, charLimit int, input string) string {
-	limit := getInputLimit(m, charLimit, input)
+	limit := getInputLimit(m, charLimit)
 	inputLength := getInputLength(m, input)
 	padWidth := len(strconv.Itoa(limit))
 	return fmt.Sprintf(fmt.Sprintf("%%0%dd", padWidth), inputLength)
@@ -443,6 +457,8 @@ func (m *model) View() tea.View {
 	m.prefixList.NewStatusMessage(versionStyle(pkgVersion()))
 
 	switch {
+	case m.viewingDiff:
+		return tea.NewView("\n" + m.diffOutput)
 	case !m.chosenPrefix:
 		return tea.NewView("\n" + m.prefixList.View())
 	case !m.chosenScope:
