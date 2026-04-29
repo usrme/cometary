@@ -135,44 +135,6 @@ func (rt *RuntimeTracker) Stop() error {
 	return nil
 }
 
-// CleanupOldData removes data older than the specified number of days
-func (rt *RuntimeTracker) CleanupOldData(daysToKeep int) error {
-	cutoff := time.Now().AddDate(0, 0, -daysToKeep)
-
-	// Helper function to check if a date string is before cutoff
-	isOld := func(dateStr string) bool {
-		t, err := time.Parse("2006-01-02", dateStr[:10])
-		if err != nil {
-			return false
-		}
-		return t.Before(cutoff)
-	}
-
-	// Clean up each period
-	for date := range rt.stats.Daily {
-		if isOld(date) {
-			delete(rt.stats.Daily, date)
-		}
-	}
-	for week := range rt.stats.Weekly {
-		if isOld(week) {
-			delete(rt.stats.Weekly, week)
-		}
-	}
-	for month := range rt.stats.Monthly {
-		if isOld(month) {
-			delete(rt.stats.Monthly, month)
-		}
-	}
-	for year := range rt.stats.Yearly {
-		if isOld(year) {
-			delete(rt.stats.Yearly, year)
-		}
-	}
-
-	return rt.saveStats()
-}
-
 // GetStats returns the current statistics
 func (rt *RuntimeTracker) GetStats() Stats {
 	return rt.stats

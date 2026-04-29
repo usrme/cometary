@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textinput"
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/compat"
 )
@@ -172,6 +173,15 @@ func applyColors(c colors) {
 	if c.SelectedItemIndicator != "" {
 		selectedItemIndicator = c.SelectedItemIndicator + " "
 	}
+
+	defaultPromptStyles = textinput.DefaultStyles(true)
+	defaultPromptStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
+	defaultPromptStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
+	overflowPromptStyles = textinput.DefaultStyles(true)
+	overflowPromptStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
+	overflowPromptStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
+	defaultLimitStyle = lipgloss.NewStyle().Foreground(characterCountColors)
+	overflowLimitStyle = lipgloss.NewStyle().Foreground(overflowCharColor)
 }
 
 func orDefault[T any](ptr *T, defaultVal T) T {

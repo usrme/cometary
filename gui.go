@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/list"
@@ -38,6 +39,10 @@ var (
 	helpStyle             lipgloss.Style
 	quitTextStyle         lipgloss.Style
 	versionStyle          func(...string) string
+	defaultPromptStyles   textinput.Styles
+	overflowPromptStyles  textinput.Styles
+	defaultLimitStyle     lipgloss.Style
+	overflowLimitStyle    lipgloss.Style
 	selectedItemIndicator string
 	scopeInputText        = "What is the scope?"
 	msgInputText          = "What is the commit message?"
@@ -114,10 +119,7 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 	prefixList.Styles.Title = titleTextStyle
 	prefixList.Styles.PaginationStyle = paginationStyle
 	prefixList.Styles.HelpStyle = helpStyle
-
-	tiStyles := textinput.DefaultStyles(true)
-	tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
-	tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
+	prefixList.NewStatusMessage(versionStyle(pkgVersion()))
 
 	scopeInput := textinput.New()
 	scopeInput.Placeholder = "Scope"
@@ -133,9 +135,9 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 	bodyConfirmation.SetWidth(20)
 	bodyConfirmation.Prompt = selectedItemIndicator
 
-	(&scopeInput).SetStyles(tiStyles)
-	(&commitInput).SetStyles(tiStyles)
-	(&bodyConfirmation).SetStyles(tiStyles)
+	scopeInput.SetStyles(defaultPromptStyles)
+	commitInput.SetStyles(defaultPromptStyles)
+	bodyConfirmation.SetStyles(defaultPromptStyles)
 
 	if c == nil || c.ScopeInputCharLimit == 0 {
 		scopeInput.CharLimit = 16
@@ -404,8 +406,12 @@ func (m *model) updateYNInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func renderCurrentLimit(m *model, charLimit int, input string) string {
-	_, color := getInputColors(m, charLimit, input)
-	return lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf("[%s/%d]", getInputCount(m, charLimit, input), getInputLimit(m, charLimit)))
+	overflow, _ := getInputColors(m, charLimit, input)
+	style := defaultLimitStyle
+	if overflow {
+		style = overflowLimitStyle
+	}
+	return style.Render(fmt.Sprintf("[%s/%d]", getInputCount(m, charLimit, input), getInputLimit(m, charLimit)))
 }
 
 func getInputColors(m *model, charLimit int, input string) (bool, compat.AdaptiveColor) {
@@ -438,13 +444,11 @@ func getInputCount(m *model, charLimit int, input string) string {
 	limit := getInputLimit(m, charLimit)
 	inputLength := getInputLength(m, input)
 	padWidth := len(strconv.Itoa(limit))
-	return fmt.Sprintf(fmt.Sprintf("%%0%dd", padWidth), inputLength)
+	return fmt.Sprintf("%0*d", padWidth, inputLength)
 }
 
 func (m *model) View() tea.View {
 	lengthExceedMessage := "Number of characters equals total input limit. Value will be left blank"
-
-	m.prefixList.NewStatusMessage(versionStyle(pkgVersion()))
 
 	switch {
 	case !m.chosenPrefix:
@@ -462,15 +466,11 @@ func (m *model) View() tea.View {
 		}
 
 		overflow, _ := getInputColors(m, m.scopeInput.CharLimit, m.scopeInput.Value())
-		tiStyles := textinput.DefaultStyles(true)
 		if overflow {
-			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
-			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
+			m.scopeInput.SetStyles(overflowPromptStyles)
 		} else {
-			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
-			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
+			m.scopeInput.SetStyles(defaultPromptStyles)
 		}
-		(&m.scopeInput).SetStyles(tiStyles)
 
 		return tea.NewView(titleStyle.Render(fmt.Sprintf(
 			"%s%s (Enter to skip / Esc to cancel) %s\n%s",
@@ -492,15 +492,11 @@ func (m *model) View() tea.View {
 		}
 
 		overflow, _ := getInputColors(m, m.msgInput.CharLimit, m.msgInput.Value())
-		tiStyles := textinput.DefaultStyles(true)
 		if overflow {
-			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
-			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(overflowCharColor)
+			m.msgInput.SetStyles(overflowPromptStyles)
 		} else {
-			tiStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
-			tiStyles.Blurred.Prompt = lipgloss.NewStyle().Foreground(selectedItemColors)
+			m.msgInput.SetStyles(defaultPromptStyles)
 		}
-		(&m.msgInput).SetStyles(tiStyles)
 
 		return tea.NewView(titleStyle.Render(fmt.Sprintf(
 			"%s%s (Esc to cancel) %s\n%s",
@@ -531,34 +527,24 @@ func formUniquePaths(stagedFiles []string, scopeCompletionOrder string) tea.Cmd 
 		uniqueMap := make(map[string]bool)
 		var joinedPaths []string
 		for _, p := range stagedFiles {
-			if _, ok := uniqueMap[p]; ok {
+			if uniqueMap[p] {
 				continue
 			}
 			s := strings.Split(p, "/")
 			for j, q := range s {
-				// Prevent overflow
-				if j+1 > len(s) {
-					continue
-				}
-				// Make sure leafs are added if they don't exist
-				if j+1 == len(s) {
-					if _, ok := uniqueMap[q]; !ok {
-						uniqueMap[q] = true
-					}
+				if j == len(s)-1 {
+					uniqueMap[q] = true
 				}
 				joinedPaths = append(joinedPaths, q)
-				joined := strings.Join(joinedPaths, "/")
-				if _, ok := uniqueMap[joined]; ok {
-					continue
-				}
-				uniqueMap[joined] = true
+				uniqueMap[strings.Join(joinedPaths, "/")] = true
 			}
-			joinedPaths = []string{}
+			joinedPaths = joinedPaths[:0]
 		}
 
 		uniquePaths := maps.Keys(uniqueMap)
+		ascending := scopeCompletionOrder == "ascending"
 		sort.Slice(uniquePaths, func(i, j int) bool {
-			if scopeCompletionOrder == "ascending" {
+			if ascending {
 				return len(uniquePaths[i]) < len(uniquePaths[j])
 			}
 			return len(uniquePaths[i]) > len(uniquePaths[j])
@@ -603,7 +589,7 @@ func findCommitMessages(grep string, findAll bool) tea.Cmd {
 	}
 }
 
-func pkgVersion() string {
+var pkgVersion = sync.OnceValue(func() string {
 	if version != "" {
 		return version
 	}
@@ -627,4 +613,4 @@ func pkgVersion() string {
 		return vcsRev
 	}
 	return "unknown"
-}
+})
