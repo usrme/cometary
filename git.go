@@ -13,6 +13,10 @@ import (
 // runDiffPager displays staged diff in an external pager.
 // --no-pager is used to force git to output raw (allowing --color=always to work),
 // then piped to less -R to enable ANSI color handling while providing navigation.
+// The explicit less invocation (without -X) uses the alternate screen buffer so
+// the pager's output is cleared on exit, leaving Cometary's UI in place rather
+// than being pushed down by leftover diff content (as happens with git's default
+// pager when configured with -X).
 func runDiffPager() tea.Cmd {
 	cmd := exec.Command("sh", "-c", "git --no-pager diff --color=always --cached | less -R")
 	cmd.Stdin = os.Stdin
