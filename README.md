@@ -98,6 +98,8 @@ There is an additional `comet.json` file that includes the prefixes and descript
     - `quitTextStyle`: margin, marginTop, marginBottom, marginLeft
     - `versionStyle`: light, dark
     - `selectedItemIndicator`: string (e.g. ">", "→", "*")
+- To prepend the scope input and commit message prompt cycling lists with the current branch name in lower-case and then in upper-case when not on the default branch, add the key `scopeBranchFirst` with the value `true`
+  - Default: `false`
 
 There is also a `-m` flag that takes a string that will be used as the basis for a search among all commit messages. For example: if you're committing something of a chore and always just use the message "update dependencies", you can do `cometary -m update` (use quotation marks if argument to `-m` includes spaces) and Cometary will populate the list of possible messages with those that include "update", which can then be cycled through with the Tab key. This is similar to the search you could make with `git log --grep="update"`.
 

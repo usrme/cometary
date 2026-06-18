@@ -25,6 +25,7 @@ type config struct {
 	ShowStats             bool     `json:"showStats"`
 	ShowStatsFormat       string   `json:"showStatsFormat"`
 	SessionStatAsSeconds  bool     `json:"sessionStatAsSeconds"`
+	ScopeBranchFirst      bool     `json:"scopeBranchFirst"`
 	ColorScheme           string   `json:"colorScheme,omitempty"`
 }
 
@@ -123,6 +124,7 @@ func newConfig() *config {
 		ShowStats:             false,
 		ShowStatsFormat:       "seconds",
 		SessionStatAsSeconds:  true,
+		ScopeBranchFirst:      false,
 	}
 }
 

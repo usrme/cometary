@@ -38,6 +38,28 @@ func filesInStaging() ([]string, error) {
 	return strings.Split(lines, "\n"), nil
 }
 
+func defaultBranch() string {
+	cmd := exec.Command("git", "symbolic-ref", "refs/remotes/origin/HEAD")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return ""
+	}
+	ref := strings.TrimSpace(string(output))
+	if idx := strings.LastIndex(ref, "/"); idx >= 0 {
+		return ref[idx+1:]
+	}
+	return ref
+}
+
+func currentBranch() (string, error) {
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", errors.New(string(output))
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
 func findGitDir() error {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	output, err := cmd.CombinedOutput()

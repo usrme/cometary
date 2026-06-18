@@ -108,9 +108,11 @@ type model struct {
 	findAllCommitMessages  bool
 	commitMessages         []string
 	messageInputIndex      int
+	branchName             string
+	scopeBranchFirst       bool
 }
 
-func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
+func newModel(c *config, stagedFiles []string, commitSearchTerm string, branchName string) *model {
 	prefixes := convertPrefixes(c.Prefixes)
 	prefixList := list.New(prefixes, itemDelegate{}, defaultWidth, listHeight)
 	prefixList.Title = "What are you committing?"
@@ -186,6 +188,8 @@ func newModel(c *config, stagedFiles []string, commitSearchTerm string) *model {
 		scopeCompletionOrder:  c.ScopeCompletionOrder,
 		commitSearchTerm:      commitSearchTerm,
 		findAllCommitMessages: c.FindAllCommitMessages,
+		branchName:            branchName,
+		scopeBranchFirst:      c.ScopeBranchFirst,
 	}
 }
 
@@ -199,8 +203,8 @@ func convertPrefixes(prefixes []prefix) []list.Item {
 
 func (m *model) Init() tea.Cmd {
 	return tea.Batch(
-		formUniquePaths(m.stagedFiles, m.scopeCompletionOrder),
-		findCommitMessages(m.commitSearchTerm, m.findAllCommitMessages),
+		formUniquePaths(m.stagedFiles, m.scopeCompletionOrder, m.branchName, m.scopeBranchFirst),
+		findCommitMessages(m.commitSearchTerm, m.findAllCommitMessages, m.branchName, m.scopeBranchFirst),
 	)
 }
 
@@ -522,7 +526,14 @@ func (m *model) View() tea.View {
 	}
 }
 
-func formUniquePaths(stagedFiles []string, scopeCompletionOrder string) tea.Cmd {
+func branchCompletionEntries(branchName string) []string {
+	if branchName == "" || branchName == defaultBranch() {
+		return nil
+	}
+	return []string{strings.ToLower(branchName), strings.ToUpper(branchName)}
+}
+
+func formUniquePaths(stagedFiles []string, scopeCompletionOrder string, branchName string, scopeBranchFirst bool) tea.Cmd {
 	return func() tea.Msg {
 		uniqueMap := make(map[string]bool)
 		var joinedPaths []string
@@ -549,18 +560,30 @@ func formUniquePaths(stagedFiles []string, scopeCompletionOrder string) tea.Cmd 
 			}
 			return len(uniquePaths[i]) > len(uniquePaths[j])
 		})
+		if scopeBranchFirst {
+			entries := branchCompletionEntries(branchName)
+			if entries != nil {
+				uniquePaths = append(entries, uniquePaths...)
+			}
+		}
 		return stagedFilesMsg(uniquePaths)
 	}
 }
 
-func findCommitMessages(grep string, findAll bool) tea.Cmd {
+func findCommitMessages(grep string, findAll bool, branchName string, scopeBranchFirst bool) tea.Cmd {
 	return func() tea.Msg {
 		if grep == "" {
+			if scopeBranchFirst {
+				return commitMessagesMsg(branchCompletionEntries(branchName))
+			}
 			return commitMessagesMsg([]string{})
 		}
 		cmd := exec.Command("git", "log", "--oneline", "--pretty=format:%s", "--grep="+grep)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
+			if scopeBranchFirst {
+				return commitMessagesMsg(branchCompletionEntries(branchName))
+			}
 			return commitMessagesMsg([]string{})
 		}
 
@@ -585,7 +608,18 @@ func findCommitMessages(grep string, findAll bool) tea.Cmd {
 			}
 			uniqueMap[msg] = true
 		}
-		return commitMessagesMsg(maps.Keys(uniqueMap))
+
+		var result []string
+		if scopeBranchFirst {
+			entries := branchCompletionEntries(branchName)
+			if entries != nil {
+				result = append(result, entries...)
+			}
+		}
+		for m := range uniqueMap {
+			result = append(result, m)
+		}
+		return commitMessagesMsg(result)
 	}
 }
 

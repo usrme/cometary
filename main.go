@@ -54,7 +54,12 @@ func main() {
 		tracker.Start()
 	}
 
-	m := newModel(config, stagedFiles, commitSearchTerm)
+	branchName, err := currentBranch()
+	if err != nil {
+		fail(err.Error())
+	}
+
+	m := newModel(config, stagedFiles, commitSearchTerm, branchName)
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fail(err.Error())
 	}
