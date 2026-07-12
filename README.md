@@ -1,7 +1,6 @@
 # Cometary
 
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/usrme/cometary)
-[![Go Report Card](https://goreportcard.com/badge/github.com/usrme/cometary)](https://goreportcard.com/report/github.com/usrme/cometary)
 
 An alternative to [Comet](https://github.com/liamg/comet) with additional features.
 
